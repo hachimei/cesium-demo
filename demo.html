@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>cesium-demo</title>
+  <link rel="stylesheet" href="./Build/Cesium/Widgets/widgets.css">
+  <style>
+    #cesium {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cesium"></div>
+  <script src="Build/Cesium/Cesium.js"></script>
+  <script>
+    var viewer = new Cesium.Viewer('cesium', {
+        animation: false, // 是否创建动画小器件，左下角仪表
+        baseLayerPicker: false, // 是否显示图层选择器
+        fullscreenButton: false, // 是否显示全屏按钮
+        geocoder: false, // 是否显示geocoder小器件，右上角查询按钮
+        homeButton: false, // 是否显示Home按钮
+        infoBox: false, // 是否显示信息框
+        sceneModePicker: false, // 是否显示3D/2D选择器
+        selectionIndicator: false, // 是否显示选取指示器组件
+        timeline: false, // 是否显示时间轴
+        navigationHelpButton: false, // 是否显示右上角的帮助按钮
+        scene3DOnly: true, // 如果设置为true，则所有几何图形以3D模式绘制以节约GPU资源
+        showRenderLoopErrors: true, // debug用
+        requestRenderMode: false, // 开启后能降低CPU/GPU使用且减少移动设备上的电量,因为渲染frame只会在需要时发生,但要手动请求更新,因此关闭
+        // useDefaultRenderLoop: false, // 值是false时,Scene#render不自动调用
+        //  globe: new Cesium.Globe(), //打开天地图
+       globe: false, // 隐藏球体
+        skyAtmosphere: false, // 隐藏天空
+        orderIndependentTranslucency: false,
+        /* skyBox: new Cesium.SkyBox({
+          sources: {
+            positiveX: config.staticFileUrl + 'static/image/posx.png',
+            negativeX: config.staticFileUrl + 'static/image/negx.png',
+            positiveY: config.staticFileUrl + 'static/image/negy.png',
+            negativeY: config.staticFileUrl + 'static/image/posy.png',
+            positiveZ: config.staticFileUrl + 'static/image/posz.png',
+            negativeZ: config.staticFileUrl + 'static/image/negz.png'
+          }
+        }), */
+        contextOptions: {
+          webgl: {
+            alpha: true
+          }
+        },
+        shadows: false, // 取消太阳照射造成的阴影
+        sun: false,
+        /* imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
+          url: 'http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=e9450a595dbc674121faa9de1650915e',
+          layer: 'tdtBasicLayer',
+          style: 'default',
+          format: 'image/jpeg',
+          tileMatrixSetID: 'GoogleMapsCompatible',
+          show: false
+        }) */
+      })
+      //imageryProvider : Cesium.createTileMapServiceImageryProvider({
+      //	url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
+      //}),
+      //tainditu
+      /* imageryProvider : Cesium.createTileMapServiceImageryProvider({
+        url : Cesium.buildModuleUrl('http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=e9450a595dbc674121faa9de1650915e')
+      }) */
+    
+    var scene = viewer.scene;
+    // 隐藏月亮和太阳
+    scene.moon = undefined
+    scene.sun = undefined
+    // viewer.scene.backgroundColor = Cesium.Color.PINK
+    var div = document.querySelector('#cesium')
+    // div.style.cssText = 'background: url(https://www.bjxbsj.cn/images/dem.jpg) no-repeat;-webkit-background-size: cover;'
+     // 设置2D平面背景
+     scene.skyBox.show = false
+     // 设置模型正常颜色显示,需配合亮度设置
+     scene.highDynamicRange = true
+    // 创建透明地球
+    // scene.globe = new Cesium.Globe();
+   // scene.backgroundColor = new Cesium.Color(0.0, 0.0, 0.0, 0.0);
+    // setTimeout(() => {scene.globe.baseColor = new Cesium.Color(0.0, 0.0, 0.0, 0.0)},3000)
+    // scene.globe.baseColor = new Cesium.Color(0.0, 0.0, 0.0, 0.0); // 无色透明地球
+   
+    // 隐藏cesium自带版权信息
+    viewer._cesiumWidget._creditContainer.style.display = "none"
+
+    var position1 = Cesium.Cartesian3.fromDegrees(113.42749714722223, 23.172580002777778, 0); //位置
+    let hpr1 = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0, 0)
+    let modelMatrix1 = Cesium.Transforms.headingPitchRollToFixedFrame(position1, hpr1)
+    // 加载模型
+    let allowPicking = true
+    viewer.scene.primitives.add(Cesium.Model.fromGltf({
+      id: 'demo',
+      url : './assets/chengdi.glb',
+      // url: createGltfResource('http://192.168.10.33:8050/cof/comba/v1/gltfs/file?fileId=64c7d46b365a434d829f46d793eb3d54'),
+      modelMatrix : modelMatrix1,
+      imageBasedLightingFactor: new Cesium.Cartesian2(1, 8), // primitive方式的模型自身光亮
+      silhouetteSize: 0, // 轮廓线大小
+      silhouetteColor: allowPicking ? Cesium.Color.GOLD : Cesium.Color.TRANSPARENT, // 轮廓线颜色
+      shadows: Cesium.ShadowMode.DISABLED,
+      allowPicking: allowPicking
+    }));
+
+    var position2 = Cesium.Cartesian3.fromDegrees(113.42722892777778, 23.172569275, 0); //位置
+    let hpr2 = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0, 0)
+    let modelMatrix2 = Cesium.Transforms.headingPitchRollToFixedFrame(position2, hpr2)
+
+    // 加载模型
+    viewer.scene.primitives.add(Cesium.Model.fromGltf({
+      id: 'fdong',
+      url : './assets/fdong.glb',
+      // url: 'http://192.168.10.33:8050/cof/comba/v1/gltfs/file?fileId=4448b24f70774eb6a756b004e3f41306',
+      // url: createGltfResource('http://192.168.10.33:8050/cof/comba/v1/gltfs/file?fileId=4448b24f70774eb6a756b004e3f41306'),
+      modelMatrix : modelMatrix2,
+      imageBasedLightingFactor: new Cesium.Cartesian2(1, 8), // primitive方式的模型自身光亮
+      silhouetteSize: 0, // 轮廓线大小
+      silhouetteColor: allowPicking ? Cesium.Color.GOLD : Cesium.Color.TRANSPARENT, // 轮廓线颜色
+      shadows: Cesium.ShadowMode.DISABLED,
+      allowPicking: allowPicking
+    }));
+
+    let camera = viewer.camera
+    var initCameraPosition = Cesium.Cartesian3.fromDegrees(113.427, 23.17, 500); // 设置相机位置,朝向
+    camera.position = initCameraPosition
+    camera.setView({
+      orientation: {
+        heading: Cesium.Math.toRadians(0.0),
+        pitch: Cesium.Math.toRadians(-50.0),
+        roll: 0.0
+      }
+    })
+
+    var position = Cesium.Cartesian3.fromDegrees(113.42749714722223, 23.172580002777778, 0); //位置
+
+    trackingPosition(position) // 设置相机焦点
+
+    //获取gltf资源
+    function createGltfResource (baseUrl) {
+      return new Cesium.Resource({
+        url: baseUrl,
+        // headers: { Authorization: this.$store.state.loginToken }
+        headers: { Authorization: 'f7c03c64-4fb9-44fa-98bb-c92e2e3b73c3' }
+      })
+    }
+
+    function trackingPosition(position){
+      let bs = new Cesium.BoundingSphere(position)
+      let range = viewer.camera.distanceToBoundingSphere(bs)
+      let offset = new Cesium.HeadingPitchRange(
+        viewer.camera.heading,
+        viewer.camera.pitch,
+        range
+      )
+      let target = new Cesium.BoundingSphere(position)
+      viewer.camera.viewBoundingSphere(target, offset)
+    }
+  </script>
+</body>
+
+</html>
