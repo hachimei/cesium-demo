@@ -19,6 +19,7 @@
 <body>
   <div id="cesium"></div>
   <script src="Build/Cesium/Cesium.js"></script>
+  <script src="./Build/navigation/navigation.js"></script>
   <script>
     var viewer = new Cesium.Viewer('cesium', {
         animation: false, // 是否创建动画小器件，左下角仪表
@@ -36,7 +37,7 @@
         requestRenderMode: false, // 开启后能降低CPU/GPU使用且减少移动设备上的电量,因为渲染frame只会在需要时发生,但要手动请求更新,因此关闭
         // useDefaultRenderLoop: false, // 值是false时,Scene#render不自动调用
         //  globe: new Cesium.Globe(), //打开天地图
-       globe: false, // 隐藏球体
+      //  globe: false, // 隐藏球体
         skyAtmosphere: false, // 隐藏天空
         orderIndependentTranslucency: false,
         /* skyBox: new Cesium.SkyBox({
@@ -73,6 +74,14 @@
         url : Cesium.buildModuleUrl('http://t0.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=e9450a595dbc674121faa9de1650915e')
       }) */
     
+    var options = {};
+    // options.defaultResetView = Cesium.Rectangle.fromDegrees(71, 3, 90, 14);
+    // Only the compass will show on the map
+    // options.enableCompass= true;
+    options.enableZoomControls= false;
+    options.enableDistanceLegend= false;
+    // options.enableCompassOuterRing= true; 
+    Cesium.viewerCesiumNavigationMixin(viewer,options);
     var scene = viewer.scene;
     // 隐藏月亮和太阳
     scene.moon = undefined
@@ -93,6 +102,22 @@
     // 隐藏cesium自带版权信息
     viewer._cesiumWidget._creditContainer.style.display = "none"
 
+    /* if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(scene)) {
+    // Silhouettes are supported
+    console.log('Silhouettes are supported')
+    var silhouetteBlue = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+    silhouetteBlue.uniforms.color = Cesium.Color.BLUE;
+    silhouetteBlue.uniforms.length = 0.01;
+    silhouetteBlue.selected = [];
+
+    var silhouetteGreen = Cesium.PostProcessStageLibrary.createEdgeDetectionStage();
+    silhouetteGreen.uniforms.color = Cesium.Color.LIME;
+    silhouetteGreen.uniforms.length = 0.01;
+    silhouetteGreen.selected = [];
+
+    scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage([silhouetteBlue, silhouetteGreen]));
+    } */
+
     var position1 = Cesium.Cartesian3.fromDegrees(113.42749714722223, 23.172580002777778, 0); //位置
     let hpr1 = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(90), 0, 0)
     let modelMatrix1 = Cesium.Transforms.headingPitchRollToFixedFrame(position1, hpr1)
@@ -103,6 +128,7 @@
       url : './assets/chengdi.glb',
       // url: createGltfResource('http://192.168.10.33:8050/cof/comba/v1/gltfs/file?fileId=64c7d46b365a434d829f46d793eb3d54'),
       modelMatrix : modelMatrix1,
+      color: new Cesium.Color(1, 1, 1, 0.12),
       imageBasedLightingFactor: new Cesium.Cartesian2(1, 8), // primitive方式的模型自身光亮
       silhouetteSize: 0, // 轮廓线大小
       silhouetteColor: allowPicking ? Cesium.Color.GOLD : Cesium.Color.TRANSPARENT, // 轮廓线颜色
@@ -122,11 +148,26 @@
       // url: createGltfResource('http://192.168.10.33:8050/cof/comba/v1/gltfs/file?fileId=4448b24f70774eb6a756b004e3f41306'),
       modelMatrix : modelMatrix2,
       imageBasedLightingFactor: new Cesium.Cartesian2(1, 8), // primitive方式的模型自身光亮
+      color: new Cesium.Color(1, 1, 1, 0.12),
       silhouetteSize: 0, // 轮廓线大小
       silhouetteColor: allowPicking ? Cesium.Color.GOLD : Cesium.Color.TRANSPARENT, // 轮廓线颜色
+      // silhouetteColor: allowPicking ? Cesium.Color.GOLD : Cesium.Color.TRANSPARENT, // 轮廓线颜色
       shadows: Cesium.ShadowMode.DISABLED,
       allowPicking: allowPicking
     }));
+
+    /* viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+      id: 'demo',
+      url : './assets/jingxin/tileset.json',
+      // url : './assets/chengdi.glb',
+      // url: createGltfResource('http://192.168.10.33:8050/cof/comba/v1/gltfs/file?fileId=64c7d46b365a434d829f46d793eb3d54'),
+      modelMatrix : modelMatrix1,
+      // imageBasedLightingFactor: new Cesium.Cartesian2(1, 8), // primitive方式的模型自身光亮
+      // silhouetteSize: 0, // 轮廓线大小
+      // silhouetteColor: allowPicking ? Cesium.Color.GOLD : Cesium.Color.TRANSPARENT, // 轮廓线颜色
+      // shadows: Cesium.ShadowMode.DISABLED,
+      // allowPicking: allowPicking
+    })); */
 
     let camera = viewer.camera
     var initCameraPosition = Cesium.Cartesian3.fromDegrees(113.427, 23.17, 500); // 设置相机位置,朝向
@@ -142,6 +183,28 @@
     var position = Cesium.Cartesian3.fromDegrees(113.42749714722223, 23.172580002777778, 0); //位置
 
     trackingPosition(position) // 设置相机焦点
+
+
+    // 后期处理
+    /* var collection = viewer.scene.postProcessStages;
+    var silhouette = collection.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
+    silhouette.enabled = true;
+    silhouette.uniforms.color = Cesium.Color.YELLOW; */
+
+    /* var collection = viewer.scene.postProcessStages;
+    var bright = collection.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
+    bright.enabled = true;
+    bright.uniforms.brightness = 0.77; */
+
+    var collection = viewer.scene.postProcessStages;
+    var bright = collection.add(Cesium.PostProcessStageLibrary.createBrightnessStage());
+    bright.enabled = true;
+    bright.uniforms.brightness = 0.77;
+    var blur = collection.add(Cesium.PostProcessStageLibrary.createBlurStage());
+    blur.enabled = true;
+    blur.uniforms.delta = 1.5;
+    blur.uniforms.sigma = 2.0;
+    blur.uniforms.stepSize = 1.0;
 
     //获取gltf资源
     function createGltfResource (baseUrl) {
@@ -163,6 +226,31 @@
       let target = new Cesium.BoundingSphere(position)
       viewer.camera.viewBoundingSphere(target, offset)
     }
+
+    /* viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
+      // let a = this.screenPositionToWGS84(movement.position)
+      // console.log('wgs84', a)
+
+      var pickedFeature = viewer.scene.pick(movement.position);
+        if (!Cesium.defined(pickedFeature)) {
+            console.log('pickedFeature undefined')
+            return;
+        }
+
+        // Select the feature if it's not already selected
+        if (silhouetteGreen.selected[0] === pickedFeature) {
+            return;
+        }
+
+        // Save the selected feature's original color
+        var highlightedFeature = silhouetteBlue.selected[0];
+        if (pickedFeature === highlightedFeature) {
+            silhouetteBlue.selected = [];
+        } 
+
+        // Highlight newly selected feature
+        silhouetteGreen.selected = [pickedFeature];
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK) */
   </script>
 </body>
 
